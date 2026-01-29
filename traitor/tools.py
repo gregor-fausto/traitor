@@ -16,6 +16,8 @@ from scipy.spatial.distance import cdist, euclidean
 
 from typing import Iterable, Tuple, Optional, List
 
+# add sorting
+from imutils import contours
 
 def segment_image(
     image: np.ndarray,
@@ -136,9 +138,20 @@ def get_contours(bin_image: np.ndarray, min_size: float) -> List[np.ndarray]:
     bin_image[0, :] = False
     bin_image[-1, :] = False
 
-    contours, hierarchy = cv2.findContours(
-        bin_image.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
-    )
+    # contours, hierarchy = cv2.findContours(
+    #     bin_image.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+    # )
+    contours, _ = cv2.findContours(bin_image.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2:]
+    (contours, _) = contours.sort_contours(contours, method="bottom-to-top")
+
+    # sort left to right
+    row = []
+    for (i, c) in enumerate(contours, 1):
+        row.append(c)
+        if i % 5 == 0:  
+            (cnts, _) = contours.sort_contours(row, method="left-to-right")
+            row = []
+
     contours = [c[:, -1, [1, 0]] for c in contours]
     contours = [c for c in contours if polygon_area(c[:, [1, 0]]) > min_size]
 
